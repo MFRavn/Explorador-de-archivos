@@ -4,7 +4,10 @@ import java.io.File;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
-
+/**
+ * Mantiene el estado de la sesión activa del gestor de archivos.
+ * Esta clase es la que la futura GUI también usará como "modelo".
+ */
 public class FileSession {
 
     private File currentDirectory;

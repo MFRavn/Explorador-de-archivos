@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mockup - Gestor de Archivos</title>
+    <style>
+        :root {
+            --bg-darker: #1e1e24;
+            --bg-dark: #2a2a32;
+            --bg-light: #33333f;
+            --accent: #7289da;
+            --text-main: #f0f0f5;
+            --text-muted: #aaaaaa;
+            --console-bg: #111115;
+            --console-text: #50fa7b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* NORTE: ToolBar */
+        .toolbar {
+            background-color: var(--bg-darker);
+            height: 55px;
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+            gap: 15px;
+            border-bottom: 1px solid var(--bg-light);
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 5px;
+        }
+
+        .btn {
+            background-color: var(--bg-light);
+            border: none;
+            color: var(--text-main);
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background-color: var(--accent);
+        }
+
+        .path-bar {
+            flex-grow: 1;
+            background-color: var(--bg-light);
+            border: 1px solid #444;
+            color: var(--text-main);
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        /* CONTENEDOR PRINCIPAL (Equivalente al resto del BorderPane) */
+        .main-container {
+            display: flex;
+            flex-grow: 1;
+            overflow: hidden;
+        }
+
+        /* OESTE: FileTree */
+        .sidebar {
+            width: 240px;
+            background-color: var(--bg-darker);
+            border-right: 1px solid var(--bg-light);
+            padding: 15px;
+            overflow-y: auto;
+        }
+
+        .section-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+
+        .tree-item {
+            padding: 6px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tree-item:hover {
+            background-color: var(--bg-light);
+        }
+
+        .tree-item.active {
+            background-color: var(--bg-light);
+            color: var(--accent);
+            font-weight: bold;
+        }
+
+        /* CENTRO: Explorador de Archivos */
+        .content-view {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background-color: var(--bg-dark);
+        }
+
+        .file-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 14px;
+        }
+
+        .file-table th {
+            color: var(--text-muted);
+            padding: 10px;
+            border-bottom: 1px solid var(--bg-light);
+            font-weight: 600;
+        }
+
+        .file-table td {
+            padding: 10px;
+            border-bottom: 1px solid #2a2a35;
+            cursor: pointer;
+        }
+
+        .file-table tr:hover td {
+            background-color: var(--bg-light);
+        }
+
+        /* ESTE: Consola Colapsable */
+        .console-panel {
+            width: 320px;
+            background-color: var(--console-bg);
+            border-left: 1px solid var(--bg-light);
+            display: flex;
+            flex-direction: column;
+            transition: width 0.3s ease;
+        }
+
+        .console-panel.collapsed {
+            width: 0;
+            overflow: hidden;
+            border-left: none;
+        }
+
+        .console-header {
+            background-color: var(--bg-darker);
+            padding: 10px 15px;
+            font-size: 12px;
+            font-weight: bold;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--bg-light);
+        }
+
+        .console-output {
+            flex-grow: 1;
+            padding: 15px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 13px;
+            color: var(--console-text);
+            overflow-y: auto;
+            line-height: 1.4;
+        }
+
+        .console-input-area {
+            display: flex;
+            background-color: #09090b;
+            padding: 8px 12px;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .console-prompt {
+            font-family: 'Courier New', Courier, monospace;
+            color: var(--accent);
+            font-weight: bold;
+        }
+
+        .console-input {
+            flex-grow: 1;
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 13px;
+            outline: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="toolbar">
+        <div class="nav-buttons">
+            <button class="btn">⏴</button>
+            <button class="btn">⏵</button>
+            <button class="btn">⮝</button>
+        </div>
+        <div class="path-bar">C:\Usuarios\TuAmigo\Proyectos\JavaFileNavigator</div>
+        <button class="btn" id="toggleConsoleBtn">💻 Terminal</button>
+    </div>
+
+    <div class="main-container">
+        
+        <div class="sidebar">
+            <div class="section-title">Marcadores</div>
+            <div class="tree-item">⭐ Acceso rápido</div>
+            <div class="tree-item">📁 Documentos</div>
+            <div class="tree-item">📁 Descargas</div>
+            <br>
+            <div class="section-title">Este Equipo</div>
+            <div class="tree-item">💽 Disco Local (C:)</div>
+            <div class="tree-item active">└── 📁 Proyectos</div>
+            <div class="tree-item">├── 📁 src</div>
+            <div class="tree-item">└── 📄 README.md</div>
+        </div>
+
+        <div class="content-view">
+            <table class="file-table">
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Fecha de modificación</th>
+                        <th>Tipo</th>
+                        <th>Tamaño</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>📁 src</td>
+                        <td>30/05/2026 11:20</td>
+                        <td>Carpeta de archivos</td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td>📁 target</td>
+                        <td>30/05/2026 11:15</td>
+                        <td>Carpeta de archivos</td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td>📄 pom.xml</td>
+                        <td>28/05/2026 18:40</td>
+                        <td>Archivo XML</td>
+                        <td>4 KB</td>
+                    </tr>
+                    <tr>
+                        <td>📄 README.md</td>
+                        <td>29/05/2026 09:12</td>
+                        <td>Archivo Markdown</td>
+                        <td>12 KB</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="console-panel" id="consolePanel">
+            <div class="console-header">
+                <span>CONSOLA INTEGRADA (JavaEngine v1.0)</span>
+            </div>
+            <div class="console-output">
+                Microsoft Windows [Versión 10.0.22631]<br>
+                (c) Microsoft Corporation. Todos los derechos reservados.<br><br>
+                ✓ Motor de archivos Java conectado.<br>
+                $ ls -l<br>
+                total 16<br>
+                drwxr-xr-x  src/<br>
+                -rw-r--r--  pom.xml<br>
+                -rw-r--r--  README.md<br>
+                $ _
+            </div>
+            <div class="console-input-area">
+                <span class="console-prompt">&gt;</span>
+                <input type="text" class="console-input" placeholder="Escribe un comando interno..." autofocus>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const toggleBtn = document.getElementById('toggleConsoleBtn');
+        const consolePanel = document.getElementById('consolePanel');
+
+        toggleBtn.addEventListener('click', () => {
+            consolePanel.classList.toggle('collapsed');
+        });
+    </script>
+</body>
+</html>

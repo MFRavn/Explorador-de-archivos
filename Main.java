@@ -1,7 +1,4 @@
-import commands.ChangeDirCommand;
-import commands.InfoCommand;
-import commands.ListCommand;
-import commands.PwdCommand;
+import commands.*;
 import core.FileSession;
 import shell.Shell;
 
@@ -24,11 +21,21 @@ public class Main {
         FileSession session = new FileSession();
         Shell shell = new Shell(session);
 
-        // Registrar todos los comandos disponibles
+        // ── Navegación ──────────────────────────────
         shell.register(new ListCommand());
         shell.register(new ChangeDirCommand());
         shell.register(new PwdCommand());
         shell.register(new InfoCommand());
+
+        // ── Operaciones de archivos ──────────────────
+        shell.register(new CopyCommand());
+        shell.register(new MoveCommand());
+
+        // ── Búsqueda ────────────────────────────────
+        shell.register(new SearchCommand());
+
+        // ── Compresión ──────────────────────────────
+        shell.register(new ZipCommand());
 
         // Arrancar el REPL
         shell.start();

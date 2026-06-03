@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VotV OS - File Navigator v0.98</title>
+    <style>
+        :root {
+            /* Paleta clásica de Windows 95/98 / Maquinaria Retro */
+            --win-gray: #d4d0c8;
+            --win-shadow-dark: #404040;
+            --win-shadow-light: #808080;
+            --win-highlight: #ffffff;
+            --win-blue: #000080;
+            --win-blue-light: #1084d0;
+            --text-dark: #000000;
+            --crt-green: #33ff33;
+            --crt-bg: #051105;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'MS Sans Serif', Tahoma, Geneva, sans-serif;
+            font-size: 12px;
+            user-select: none;
+        }
+
+        body {
+            background-color: #3a6ea5; /* El mítico fondo azul-verdoso de Windows 98 */
+            color: var(--text-dark);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            overflow: hidden;
+        }
+
+        /* Contenedor de la Ventana (Estilo Win98) */
+        .window {
+            background-color: var(--win-gray);
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            border-top: 2px solid var(--win-highlight);
+            border-left: 2px solid var(--win-highlight);
+            border-right: 2px solid var(--win-shadow-dark);
+            border-bottom: 2px solid var(--win-shadow-dark);
+            box-shadow: 1px 1px 0px 0px black;
+            padding: 3px;
+        }
+
+        /* BARRA DE TÍTULO */
+        .title-bar {
+            background: linear-gradient(90deg, var(--win-blue), var(--win-blue-light));
+            color: white;
+            padding: 4px 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+        }
+
+        .title-text {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+        }
+
+        .title-controls button {
+            background-color: var(--win-gray);
+            border-top: 1px solid var(--win-highlight);
+            border-left: 1px solid var(--win-highlight);
+            border-right: 1px solid var(--win-shadow-dark);
+            border-bottom: 1px solid var(--win-shadow-dark);
+            width: 16px;
+            height: 14px;
+            font-size: 9px;
+            font-weight: bold;
+            cursor: pointer;
+            text-align: center;
+            line-height: 10px;
+        }
+
+        /* BARRA DE MENÚ (Archivo, Edición...) */
+        .menu-bar {
+            display: flex;
+            gap: 10px;
+            padding: 4px 6px;
+            border-bottom: 1px solid var(--win-shadow-light);
+        }
+
+        .menu-item::first-letter {
+            text-decoration: underline;
+        }
+
+        /* NORTE: ToolBar */
+        .toolbar {
+            display: flex;
+            align-items: center;
+            padding: 6px;
+            gap: 8px;
+            border-bottom: 2px solid var(--win-shadow-light);
+            box-shadow: 0px 1px 0px 0px var(--win-highlight);
+        }
+
+        .btn-win {
+            background-color: var(--win-gray);
+            border-top: 1px solid var(--win-highlight);
+            border-left: 1px solid var(--win-highlight);
+            border-right: 1px solid var(--win-shadow-dark);
+            border-bottom: 1px solid var(--win-shadow-dark);
+            padding: 4px 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .btn-win:active {
+            border-top: 1px solid var(--win-shadow-dark);
+            border-left: 1px solid var(--win-shadow-dark);
+            border-right: 1px solid var(--win-highlight);
+            border-bottom: 1px solid var(--win-highlight);
+            padding: 5px 9px 3px 11px;
+        }
+
+        .path-label {
+            font-size: 11px;
+            color: #555;
+        }
+
+        .path-bar {
+            flex-grow: 1;
+            background-color: white;
+            border-top: 1px solid var(--win-shadow-dark);
+            border-left: 1px solid var(--win-shadow-dark);
+            border-right: 1px solid var(--win-highlight);
+            border-bottom: 1px solid var(--win-highlight);
+            padding: 3px 6px;
+            color: black;
+            font-family: monospace;
+        }
+
+        /* CONTENEDOR PRINCIPAL */
+        .main-container {
+            display: flex;
+            flex-grow: 1;
+            overflow: hidden;
+            padding-top: 4px;
+            gap: 4px;
+        }
+
+        /* Contenedores con el clásico "hundido" (Inverted Bevel) */
+        .win-inset {
+            background-color: white;
+            border-top: 2px solid var(--win-shadow-dark);
+            border-left: 2px solid var(--win-shadow-dark);
+            border-right: 2px solid var(--win-highlight);
+            border-bottom: 2px solid var(--win-highlight);
+            overflow-y: auto;
+        }
+
+        /* OESTE: Arbol de archivos */
+        .sidebar {
+            width: 200px;
+            padding: 6px;
+        }
+
+        .tree-node {
+            padding: 2px 4px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .tree-node:hover {
+            background-color: #e0e0e0;
+        }
+
+        .tree-node.selected {
+            background-color: var(--win-blue);
+            color: white;
+        }
+
+        /* CENTRO: Explorador estilo Windows 98 */
+        .content-view {
+            flex-grow: 1;
+        }
+
+        .file-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        .file-table th {
+            background-color: var(--win-gray);
+            position: sticky;
+            top: 0;
+            padding: 4px;
+            border-top: 1px solid var(--win-highlight);
+            border-left: 1px solid var(--win-highlight);
+            border-right: 1px solid var(--win-shadow-dark);
+            border-bottom: 1px solid var(--win-shadow-dark);
+            font-weight: normal;
+            box-shadow: inset 1px 1px 0px var(--win-highlight);
+        }
+
+        .file-table td {
+            padding: 4px;
+            font-family: 'MS Sans Serif', sans-serif;
+            white-space: nowrap;
+        }
+
+        .file-table tr.selected td {
+            background-color: var(--win-blue);
+            color: white;
+        }
+
+        /* ESTE: Consola estilo Monitor CRT (Voices of the Void) */
+        .console-panel {
+            width: 350px;
+            background-color: var(--crt-bg);
+            border-top: 2px solid var(--win-shadow-dark);
+            border-left: 2px solid var(--win-shadow-dark);
+            border-right: 2px solid var(--win-highlight);
+            border-bottom: 2px solid var(--win-highlight);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+            transition: width 0.2s ease;
+        }
+
+        .console-panel.collapsed {
+            width: 0;
+            border: none;
+            overflow: hidden;
+        }
+
+        /* Efecto de líneas de escaneo CRT */
+        .console-panel::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 2;
+            background-size: 100% 3px, 3px 100%;
+            pointer-events: none;
+        }
+
+        .console-header {
+            background-color: #1a251a;
+            color: var(--crt-green);
+            padding: 4px 8px;
+            font-family: monospace;
+            font-size: 11px;
+            border-bottom: 1px solid #225522;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        .console-output {
+            flex-grow: 1;
+            padding: 10px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 12px;
+            color: var(--crt-green);
+            overflow-y: auto;
+            text-shadow: 0 0 4px rgba(51, 255, 51, 0.5);
+            line-height: 1.3;
+        }
+
+        .console-input-area {
+            display: flex;
+            background-color: #020802;
+            padding: 6px 10px;
+            border-top: 1px solid #225522;
+            align-items: center;
+        }
+
+        .console-prompt {
+            font-family: 'Courier New', Courier, monospace;
+            color: var(--crt-green);
+            font-weight: bold;
+            margin-right: 5px;
+            text-shadow: 0 0 4px rgba(51, 255, 51, 0.5);
+        }
+
+        .console-input {
+            flex-grow: 1;
+            background: transparent;
+            border: none;
+            color: var(--crt-green);
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 12px;
+            outline: none;
+            text-shadow: 0 0 4px rgba(51, 255, 51, 0.5);
+        }
+
+        /* Estado de la barra inferior (Status Bar) */
+        .status-bar {
+            margin-top: 4px;
+            display: flex;
+            gap: 4px;
+        }
+
+        .status-field {
+            background-color: var(--win-gray);
+            border-top: 1px solid var(--win-shadow-dark);
+            border-left: 1px solid var(--win-shadow-dark);
+            border-right: 1px solid var(--win-highlight);
+            border-bottom: 1px solid var(--win-highlight);
+            padding: 2px 6px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- LA VENTANA DEL SISTEMA -->
+    <div class="window">
+        
+        <!-- BARRA DE TITULO -->
+        <div class="title-bar">
+            <div class="title-text">📡 VotV_Signal_Navigator_v0.98.exe</div>
+            <div class="title-controls">
+                <button>_</button>
+                <button>🗖</button>
+                <button>X</button>
+            </div>
+        </div>
+
+        <!-- MENU SUPERIOR -->
+        <div class="menu-bar">
+            <div class="menu-item">Archivo</div>
+            <div class="menu-item">Editar</div>
+            <div class="menu-item">Ver</div>
+            <div class="menu-item">Terminal</div>
+        </div>
+
+        <!-- TOOLBAR (NORTE) -->
+        <div class="toolbar">
+            <button class="btn-win">⬅ Atrás</button>
+            <button class="btn-win">⬆ Arriba</button>
+            <div class="path-label">Ruta:</div>
+            <div class="path-bar">C:\DeepSpace_Data\Signals\Sector_E\Unprocessed</div>
+            <button class="btn-win" id="toggleTerminal" style="font-weight: bold;">📟 Ver CRT</button>
+        </div>
+
+        <!-- CONTENEDOR CENTRAL -->
+        <div class="main-container">
+            
+            <!-- ARBOL DE DIRECTORIOS (OESTE) -->
+            <div class="sidebar win-inset">
+                <div class="tree-node">📁 Mi PC</div>
+                <div class="tree-node">└── 📁 Disco Local (C:)</div>
+                <div class="tree-node">    └── 📁 DeepSpace_Data</div>
+                <div class="tree-node">        └── 📁 Signals</div>
+                <div class="tree-node selected">            └── 📁 Sector_E</div>
+            </div>
+
+            <!-- TABLA DE ARCHIVOS (CENTRO) -->
+            <div class="content-view win-inset">
+                <table class="file-table">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Tamaño</th>
+                            <th>Tipo de Señal</th>
+                            <th>Modificado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="selected">
+                            <td>📻 signal_raw_041.dat</td>
+                            <td>4,120 KB</td>
+                            <td>Frecuencia Ultra-Baja</td>
+                            <td>01/06/2026 03:14</td>
+                        </tr>
+                        <tr>
+                            <td>📻 signal_raw_042.dat</td>
+                            <td>8,411 KB</td>
+                            <td>Ruido de Fondo Estelar</td>
+                            <td>01/06/2026 04:22</td>
+                        </tr>
+                        <tr>
+                            <td>📊 spectral_analysis.log</td>
+                            <td>42 KB</td>
+                            <td>Documento de texto</td>
+                            <td>01/06/2026 05:00</td>
+                        </tr>
+                        <tr>
+                            <td>⚠️ ERROR_LOG.txt</td>
+                            <td>1 KB</td>
+                            <td>Documento de texto</td>
+                            <td>01/06/2026 08:30</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- TERMINAL CRT RADIACTIVA (ESTE) -->
+            <div class="console-panel" id="terminalCrt">
+                <div class="console-header">
+                    SATELLITE DOWNLINK SYSTEM // DEEP_SPACE_COMM
+                </div>
+                <div class="console-output">
+                    VOTV-OS v4.11 Loaded.<br>
+                    Array Status: ONLINE (Sub-servers: 8/8)<br>
+                    Listening on Frequency: 1.420 GHz (Hydrogen Line)<br>
+                    ----------------------------------------<br>
+                    * ALERTA: Anomalía detectada en Sector E.<br>
+                    * Descargando búfer de señal... HECHO.<br><br>
+                    C:\Sector_E&gt; _
+                </div>
+                <div class="console-input-area">
+                    <span class="console-prompt">#</span>
+                    <input type="text" class="console-input" placeholder="Comando satélite..." autofocus>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- BARRA DE ESTADO INFERIOR -->
+        <div class="status-bar">
+            <div class="status-field" style="flex-grow: 1;">4 objeto(s) encontrados</div>
+            <div class="status-field">Detección: 84%</div>
+            <div class="status-field">Filtro: Nivel 2</div>
+        </div>
+
+    </div>
+
+    <script>
+        const btn = document.getElementById('toggleTerminal');
+        const term = document.getElementById('terminalCrt');
+        btn.addEventListener('click', () => {
+            term.classList.toggle('collapsed');
+        });
+    </script>
+</body>
+</html>

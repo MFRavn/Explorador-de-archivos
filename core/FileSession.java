@@ -3,6 +3,7 @@ package core;
 import java.io.File;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.Scanner;
 
 /**
  * Mantiene el estado de la sesión activa del gestor de archivos.
@@ -13,9 +14,34 @@ public class FileSession {
     private File currentDirectory;
     private final Deque<File> history = new ArrayDeque<>();
 
+    /**
+     * Scanner compartido para toda la sesión.
+     * Los comandos que necesiten leer input del usuario (ej: confirmaciones)
+     * usan este scanner en lugar de crear uno propio, evitando conflictos con stdin.
+     */
+    private Scanner scanner;
+
     public FileSession() {
-        // Arrancamos en el directorio home del usuario
         this.currentDirectory = new File(System.getProperty("user.home"));
+    }
+
+    public void setScanner(Scanner scanner) {
+        this.scanner = scanner;
+    }
+
+    public Scanner getScanner() {
+        return scanner;
+    }
+
+    /**
+     * Muestra un prompt de confirmación y devuelve true si el usuario responde s/S/y/Y.
+     * Usado por DeleteCommand y cualquier operación destructiva futura.
+     */
+    public boolean confirm(String question) {
+        System.out.print(question + " [s/N]: ");
+        if (scanner == null || !scanner.hasNextLine()) return false;
+        String answer = scanner.nextLine().trim().toLowerCase();
+        return answer.equals("s") || answer.equals("y") || answer.equals("si") || answer.equals("yes");
     }
 
     /** Cambia el directorio actual y guarda el anterior en el historial. */
@@ -24,16 +50,14 @@ public class FileSession {
 
         if (path.equals("..")) {
             File parent = currentDirectory.getParentFile();
-            if (parent == null) return false; // ya estamos en raíz
+            if (parent == null) return false;
             target = parent;
         } else if (path.equals("~")) {
             target = new File(System.getProperty("user.home"));
         } else if (path.equals("-")) {
-            // Volver al directorio anterior (como bash)
             if (history.isEmpty()) return false;
             target = history.peek();
         } else {
-            // Ruta absoluta o relativa
             target = new File(path);
             if (!target.isAbsolute()) {
                 target = new File(currentDirectory, path);
@@ -49,7 +73,7 @@ public class FileSession {
         if (!target.exists() || !target.isDirectory()) return false;
 
         history.push(currentDirectory);
-        if (history.size() > 50) history.pollLast(); // limitar historial
+        if (history.size() > 50) history.pollLast();
         currentDirectory = target;
         return true;
     }

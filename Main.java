@@ -26,10 +26,14 @@ public class Main {
         shell.register(new ChangeDirCommand());
         shell.register(new PwdCommand());
         shell.register(new InfoCommand());
+        shell.register(new TreeCommand());
 
         // ── Operaciones de archivos ──────────────────
         shell.register(new CopyCommand());
         shell.register(new MoveCommand());
+        shell.register(new RenameCommand());
+        shell.register(new DeleteCommand());
+        shell.register(new MkdirCommand());
 
         // ── Búsqueda ────────────────────────────────
         shell.register(new SearchCommand());
@@ -37,7 +41,6 @@ public class Main {
         // ── Compresión ──────────────────────────────
         shell.register(new ZipCommand());
 
-        // Arrancar el REPL
         shell.start();
     }
 }

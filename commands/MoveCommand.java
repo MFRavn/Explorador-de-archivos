@@ -153,7 +153,7 @@ public class MoveCommand implements Command {
 
     @Override
     public String[] names() {
-        return new String[]{"move", "mv", "rename", "ren"};
+        return new String[]{"move", "mv"};
     }
 
     @Override
